@@ -1,7 +1,8 @@
 import { component$, useStore } from "@builder.io/qwik";
 import { server$, type DocumentHead } from "@builder.io/qwik-city";
+import sharp from "sharp";
 
-const openai_image_url= 'https://api.openai.com/v1/images/generations'
+const openai_image_url = "https://api.openai.com/v1/images/generations";
 const huggingface_image_url =
   "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5";
 const openai_summary_url = "https://api.openai.com/v1/chat/completions";
@@ -28,53 +29,57 @@ const generateHfImage = server$(async function (prompt: string) {
   });
   if (response.ok) {
     const data = await response.arrayBuffer();
+    const resizedData = await new Promise<Buffer>((resolve, reject) => {
+      sharp(data)
+        .resize({ width: 1200, height: 630, fit: "cover" })
+        .toBuffer((err, buffer) => {
+          if (err) reject(err);
+          else resolve(buffer);
+        });
+    });
 
     return generateDataURL(
       response.headers.get("Content-Type") || "image/jpeg",
-      Buffer.from(data),
+      resizedData,
     );
   }
   const msg = response.status + ": " + (await response.text());
   throw new Error(msg);
 });
 
-const generateOpenAiImage = server$ (async function(prompt:string) {
+const generateOpenAiImage = server$(async function (prompt: string) {
   const request_image_json = {
-    "model": "dall-e-3",
-    "prompt": prompt,
-    "n": 1,
-    "size": "1200x630"
-  }
+    model: "dall-e-3",
+    prompt: prompt,
+    n: 1,
+    size: "1200x630",
+  };
 
-
-  const response = await fetch(openai_image_url,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + this.env.get("HF_KEY")
-      },
-      body: JSON.stringify(request_image_json)
-    }
-  )
+  const response = await fetch(openai_image_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + this.env.get("HF_KEY"),
+    },
+    body: JSON.stringify(request_image_json),
+  });
   if (response.ok) {
-    const data = await response.json()
-    console.log(data.data[0].url)
-    return data.data[0].url
+    const data = await response.json();
+    console.log(data.data[0].url);
+    return data.data[0].url;
   }
-  const msg = response.status + ": " + await response.text()
-  throw new Error(msg)
-}
-)
+  const msg = response.status + ": " + (await response.text());
+  throw new Error(msg);
+});
 
-const USE_OPENAI = true
+const USE_OPENAI = false;
 
 const generateImage = server$(async function (prompt: string) {
   if (USE_OPENAI) {
-    return generateOpenAiImage(prompt)
+    return generateOpenAiImage(prompt);
   }
-  return generateHfImage(prompt)
-})
+  return generateHfImage(prompt);
+});
 
 // Generate summary
 const generateSummary = server$(async function (full_content: string) {
@@ -145,12 +150,19 @@ export default component$(() => {
         {store.loading ? "Loading..." : "Generate!"}
       </button>
       <br />
-      {store.url && <img src={store.url} 
-      width={1200}
-      height={630}
-      style={{objectFit: 'cover', maxWidth: '100%'}}
-      alt='Generated image' 
-      />}
+      {store.url && (
+        <img
+          src={store.url}
+          width={1200}
+          height={630}
+          style={{
+            maxWidth: "90vw",
+            width: "1200px",
+            aspectRatio: "1200 / 630",
+          }}
+          alt="Generated image"
+        />
+      )}
     </>
   );
 });
