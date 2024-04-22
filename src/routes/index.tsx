@@ -15,7 +15,39 @@ const generateDataURL= (mediatype:string, data:Buffer)=> {
 }
 
 // Generate image from summary
-const generateImage = server$ (async function(prompt:string='') {
+const generateHfImage = server$ (async function(prompt:string='') {
+  // const request_image_json = {
+  //   "model": "dall-e-3",
+  //   "prompt": prompt,
+  //   "n": 1,
+  //   "size": "1024x1024"
+  // }
+  const request_image_json = {
+    "inputs": prompt
+  }
+
+  const response = await fetch(openai_image_url,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + this.env.get("HF_KEY")
+      },
+      body: JSON.stringify(request_image_json)
+    }
+  )
+  if (response.ok) {
+    const data = await response.arrayBuffer()
+
+    return generateDataURL(response.headers.get('Content-Type')||"image/jpeg", Buffer.from(data))
+  }
+  const msg = response.status + ": " + await response.text()
+  throw new Error(msg)
+}
+)
+
+// Generate image from summary
+const generateOpenAiImage = server$ (async function(prompt:string='') {
   // const request_image_json = {
   //   "model": "dall-e-3",
   //   "prompt": prompt,
@@ -84,8 +116,12 @@ const generateSummary = server$ (async function(full_content:string) {
 )
 
 const generate_image_from_summary = server$ (async function(full_content:string) {
-  const generated_summary = await generateSummary(full_content)
-  const generated_image = await generateImage(generated_summary)
+  let generated_summary = full_content
+  const input_prompt_length = full_content.length
+  if (input_prompt_length > 300) {
+    generated_summary = await generateSummary(full_content)
+  }
+  const generated_image = await generateHfImage(generated_summary)
   return generated_image
 })
 
