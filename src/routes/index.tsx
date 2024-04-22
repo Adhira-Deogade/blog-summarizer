@@ -1,7 +1,7 @@
 import { component$, useStore } from "@builder.io/qwik";
 import { server$, type DocumentHead } from "@builder.io/qwik-city";
 
-const openai_image_url= 'https://api.openai.com/v1/image/generation'
+const openai_image_url= 'https://api.openai.com/v1/images/generations'
 const huggingface_image_url =
   "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5";
 const openai_summary_url = "https://api.openai.com/v1/chat/completions";
@@ -67,8 +67,10 @@ const generateOpenAiImage = server$ (async function(prompt:string) {
 }
 )
 
+const USE_OPENAI = true
+
 const generateImage = server$(async function (prompt: string) {
-  if (true) {
+  if (USE_OPENAI) {
     return generateOpenAiImage(prompt)
   }
   return generateHfImage(prompt)
@@ -137,7 +139,6 @@ export default component$(() => {
         disabled={store.loading}
         onClick$={async () => {
           store.loading = true;
-          // store.url = await generateImage()
           store.url = await generate_image_from_summary(store.input);
         }}
       >
@@ -147,6 +148,7 @@ export default component$(() => {
       {store.url && <img src={store.url} 
       width={1200}
       height={630}
+      style={{objectFit: 'cover', maxWidth: '100%'}}
       alt='Generated image' 
       />}
     </>
