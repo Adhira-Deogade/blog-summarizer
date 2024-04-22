@@ -158,6 +158,7 @@ export default component$(() => {
           style={{
             maxWidth: "90vw",
             width: "1200px",
+            height: 'auto',
             aspectRatio: "1200 / 630",
           }}
           alt="Generated image"
