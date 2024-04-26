@@ -90,7 +90,8 @@ const generateSummary = server$(async function (full_content: string) {
       {
         role: "system",
         content:
-          "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and summarize it into a concise abstract paragraph. Aim to retain the most important points, providing a coherent and readable summary that could help a person understand the main points of the discussion without needing to read the entire text. Please avoid unnecessary details or tangential points.",
+        "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and provide an image description that would pair well with the content. Avoid descriptions that involve text or graphic design or images of people",
+          // "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and summarize it into a concise abstract paragraph. Aim to retain the most important points, providing a coherent and readable summary that could help a person understand the main points of the discussion without needing to read the entire text. Please avoid unnecessary details or tangential points.",
       },
       {
         role: "user",
@@ -132,7 +133,7 @@ export default component$(() => {
   const store = useStore({ url: "", loading: false, input: "" });
   return (
     <>
-      <h1>Cat Image Generator!</h1>
+      <h1>Blog Summary Image Generator!</h1>
       <input
         disabled={store.loading}
         placeholder="Enter prompt"
