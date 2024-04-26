@@ -120,6 +120,7 @@ const generateSummary = server$(async function (full_content: string) {
 const generate_image_from_summary = server$(async function (
   full_content: string,
 ) {
+  console.log(full_content)
   let generated_summary = full_content;
   const input_prompt_length = full_content.length;
   if (input_prompt_length > 300) {
@@ -133,25 +134,51 @@ export default component$(() => {
   const store = useStore({ url: "", loading: false, input: "" });
   return (
     <>
-      <h1>Blog Summary Image Generator!</h1>
-      <input
-        disabled={store.loading}
-        placeholder="Enter prompt"
-        onInput$={(_, target) => {
-          store.input = target.value;
-        }}
-      ></input>
-      <button
+      <header class="header">
+        <h1>Instant Cover Images</h1>
+      </header>
+      <form class="main maxed">
+      <label for="content">Your text</label>
+      <textarea
+      id="content"
+      disabled={store.loading}
+      placeholder="Enter your blog post, podcast transcript, or any other text"
+      onInput$={(_, target) => {
+        store.input = target.value;
+      }}
+      ></textarea>
+      <div class="action-buttons buttons">
+        <button class="plain-button" type="reset">Clear</button>
+        <button
         disabled={store.loading}
         onClick$={async () => {
           store.loading = true;
           store.url = await generate_image_from_summary(store.input);
         }}
-      >
-        {store.loading ? "Loading..." : "Generate!"}
-      </button>
-      <br />
-      {store.url && (
+        // {store.loading ? "Loading..." : "Generate!"}
+        class="plain-button" type="submit">Generate</button>
+      </div>
+      </form>
+      <div class="result">
+          <div class="result-inner maxed">
+                {store.url && (
+              <img
+                src={store.url}
+                width={1200}
+                height={630}
+                // alt={content}
+              />
+            )}
+            {/* <img src="https://picsum.photos/1200/630" width=
+            {1200} height={630} alt="${placeholder}" /> */}
+            {/* <img src={store.url} width={1200} height={630} alt="${placeholder}" /> */}
+            <div class="buttons">
+              <button class="plain-button" type="button">Close</  button>
+              <a href="#" download class="plain-button">Download</a>
+            </div>
+          </div>
+      </div>
+      {/* {store.url && (
         <img
           src={store.url}
           width={1200}
@@ -164,7 +191,7 @@ export default component$(() => {
           }}
           alt="Generated image"
         />
-      )}
+      )} */}
     </>
   );
 });
