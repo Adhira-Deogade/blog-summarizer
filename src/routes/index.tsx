@@ -90,8 +90,8 @@ const generateSummary = server$(async function (full_content: string) {
       {
         role: "system",
         content:
-        "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and provide an image description that would pair well with the content. Avoid descriptions that involve text or graphic design or images of people",
-          // "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and summarize it into a concise abstract paragraph. Aim to retain the most important points, providing a coherent and readable summary that could help a person understand the main points of the discussion without needing to read the entire text. Please avoid unnecessary details or tangential points.",
+          "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and provide an image description that would pair well with the content. Avoid descriptions that involve text or graphic design or images of people",
+        // "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and summarize it into a concise abstract paragraph. Aim to retain the most important points, providing a coherent and readable summary that could help a person understand the main points of the discussion without needing to read the entire text. Please avoid unnecessary details or tangential points.",
       },
       {
         role: "user",
@@ -120,7 +120,7 @@ const generateSummary = server$(async function (full_content: string) {
 const generate_image_from_summary = server$(async function (
   full_content: string,
 ) {
-  console.log(full_content)
+  console.log(full_content);
   let generated_summary = full_content;
   const input_prompt_length = full_content.length;
   if (input_prompt_length > 300) {
@@ -138,45 +138,55 @@ export default component$(() => {
         <h1>Instant Cover Images</h1>
       </header>
       <form class="main maxed">
-      <label for="content">Your text</label>
-      <textarea
-      id="content"
-      disabled={store.loading}
-      placeholder="Enter your blog post, podcast transcript, or any other text"
-      onInput$={(_, target) => {
-        store.input = target.value;
-      }}
-      ></textarea>
-      <div class="action-buttons buttons">
-        <button class="plain-button" type="reset">Clear</button>
-        <button
-        disabled={store.loading}
-        onClick$={async () => {
-          store.loading = true;
-          store.url = await generate_image_from_summary(store.input);
-        }}
-        // {store.loading ? "Loading..." : "Generate!"}
-        class="plain-button" type="submit">Generate</button>
-      </div>
+        <label for="content">Your text</label>
+        <textarea
+          id="content"
+          disabled={store.loading}
+          placeholder="Enter your blog post, podcast transcript, or any other text"
+          onInput$={(_, target) => {
+            store.input = target.value;
+          }}
+        ></textarea>
+        <div class="action-buttons buttons">
+          <button class="plain-button" type="reset">
+            Clear
+          </button>
+          <button
+            disabled={store.loading}
+            onClick$={async () => {
+              store.loading = true;
+              store.url = await generate_image_from_summary(store.input);
+            }}
+            // {store.loading ? "Loading..." : "Generate!"}
+            class="plain-button"
+            type="submit"
+          >
+            Generate
+          </button>
+        </div>
       </form>
       <div class="result">
-          <div class="result-inner maxed">
-                {store.url && (
-              <img
-                src={store.url}
-                width={1200}
-                height={630}
-                // alt={content}
-              />
-            )}
-            {/* <img src="https://picsum.photos/1200/630" width=
+        <div class="result-inner maxed">
+          {store.url && (
+            <img
+              src={store.url}
+              width={1200}
+              height={630}
+              // alt={content}
+            />
+          )}
+          {/* <img src="https://picsum.photos/1200/630" width=
             {1200} height={630} alt="${placeholder}" /> */}
-            {/* <img src={store.url} width={1200} height={630} alt="${placeholder}" /> */}
-            <div class="buttons">
-              <button class="plain-button" type="button">Close</  button>
-              <a href="#" download class="plain-button">Download</a>
-            </div>
+          {/* <img src={store.url} width={1200} height={630} alt="${placeholder}" /> */}
+          <div class="buttons">
+            <button class="plain-button" type="button">
+              Close
+            </button>
+            <a href="#" download class="plain-button">
+              Download
+            </a>
           </div>
+        </div>
       </div>
       {/* {store.url && (
         <img
