@@ -212,7 +212,7 @@ export default component$(() => {
               </button>
               <a
                 href={summaryImageAction.value.url}
-                download
+                download="cover-image"
                 class="plain-button"
               >
                 Download
