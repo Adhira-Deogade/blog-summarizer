@@ -1,5 +1,12 @@
-import { component$, useStore } from "@builder.io/qwik";
-import { server$, type DocumentHead } from "@builder.io/qwik-city";
+import { component$ } from "@builder.io/qwik";
+import {
+  Form,
+  routeAction$,
+  server$,
+  z,
+  zod$,
+  type DocumentHead,
+} from "@builder.io/qwik-city";
 import sharp from "sharp";
 
 const openai_image_url = "https://api.openai.com/v1/images/generations";
@@ -117,101 +124,113 @@ const generateSummary = server$(async function (full_content: string) {
   throw new Error(msg);
 });
 
-const generate_image_from_summary = server$(async function (
-  full_content: string,
-) {
-  console.log(full_content);
-  let generated_summary = full_content;
-  const input_prompt_length = full_content.length;
-  if (input_prompt_length > 300) {
-    generated_summary = await generateSummary(full_content);
-  }
-  const generated_image = await generateImage(generated_summary);
-  return generated_image;
-});
+export const useSummaryImageAction = routeAction$(
+  async function (data, ctx) {
+    try {
+      let generated_summary = data.content;
+      if (data.content.length > 300) {
+        generated_summary = await generateSummary(data.content);
+      }
+      const generated_image: string = await generateImage(generated_summary);
+      return { url: generated_image };
+    } catch (err) {
+      console.error(err);
+      return ctx.fail(400, { message: "Failed to load image." });
+    }
+  },
+  zod$({
+    content: z.string().min(1),
+  }),
+);
 
 export default component$(() => {
-  const store = useStore({ url: "", loading: false, input: "" });
+  const summaryImageAction = useSummaryImageAction();
   return (
     <>
       <header class="header">
         <h1>Instant Cover Images</h1>
       </header>
-      <form class="main maxed">
+      {summaryImageAction.value?.failed && (
+        <ul class="maxed">
+          {summaryImageAction.value.message && (
+            <li>{summaryImageAction.value.message}</li>
+          )}
+          {summaryImageAction.value.formErrors?.map((e, i) => (
+            <li key={i}>{e}</li>
+          ))}
+          {summaryImageAction.value.fieldErrors &&
+            Object.entries(summaryImageAction.value.fieldErrors).map(
+              ([key, errors]) =>
+                errors.map((e, i) => (
+                  <li key={i}>
+                    {key}: {e}
+                  </li>
+                )),
+            )}
+        </ul>
+      )}
+      <Form class="main maxed" action={summaryImageAction}>
         <label for="content">Your text</label>
         <textarea
           id="content"
-          disabled={store.loading}
+          name="content"
+          value=""
+          disabled={summaryImageAction.isRunning}
           placeholder="Enter your blog post, podcast transcript, or any other text"
-          onInput$={(_, target) => {
-            store.input = target.value;
-          }}
         ></textarea>
         <div class="action-buttons buttons">
           <button class="plain-button" type="reset">
             Clear
           </button>
           <button
-            disabled={store.loading}
-            onClick$={async () => {
-              store.loading = true;
-              store.url = await generate_image_from_summary(store.input);
-            }}
-            // {store.loading ? "Loading..." : "Generate!"}
+            disabled={summaryImageAction.isRunning}
             class="plain-button"
             type="submit"
           >
             Generate
           </button>
         </div>
-      </form>
-      <div class="result">
-        <div class="result-inner maxed">
-          {store.url && (
+      </Form>
+      {summaryImageAction.value && !summaryImageAction.value.failed && (
+        <div class="result">
+          <div class="result-inner maxed">
             <img
-              src={store.url}
+              src={summaryImageAction.value.url}
               width={1200}
               height={630}
               // alt={content}
             />
-          )}
-          {/* <img src="https://picsum.photos/1200/630" width=
-            {1200} height={630} alt="${placeholder}" /> */}
-          {/* <img src={store.url} width={1200} height={630} alt="${placeholder}" /> */}
-          <div class="buttons">
-            <button class="plain-button" type="button">
-              Close
-            </button>
-            <a href="#" download class="plain-button">
-              Download
-            </a>
+            <div class="buttons">
+              <button
+                class="plain-button"
+                type="button"
+                onClick$={() => {
+                  (summaryImageAction as any).value = null;
+                }}
+              >
+                Close
+              </button>
+              <a
+                href={summaryImageAction.value.url}
+                download
+                class="plain-button"
+              >
+                Download
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-      {/* {store.url && (
-        <img
-          src={store.url}
-          width={1200}
-          height={630}
-          style={{
-            maxWidth: "90vw",
-            width: "1200px",
-            height: 'auto',
-            aspectRatio: "1200 / 630",
-          }}
-          alt="Generated image"
-        />
-      )} */}
+      )}
     </>
   );
 });
 
 export const head: DocumentHead = {
-  title: "Welcome to Qwik",
+  title: "Instant Cover Images",
   meta: [
     {
       name: "description",
-      content: "Qwik site description",
+      content: "Quickly generate cover images for blog posts",
     },
   ],
 };
