@@ -118,9 +118,13 @@ body {
   text-decoration: none;
 }
 
-.plain-button:hover {
+.plain-button:hover:not(:disabled) {
   background: #0002;
 }
+
+.plain-button:disabled {
+    opacity: 0.5;
+  }
 
 .plain-button:focus-visible {
   outline: 3px solid #0ab;

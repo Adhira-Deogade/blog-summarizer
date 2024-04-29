@@ -10,8 +10,9 @@ import {
 import sharp from "sharp";
 
 const openai_image_url = "https://api.openai.com/v1/images/generations";
-const huggingface_image_url =
-  "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5";
+const huggingface_image_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+// const huggingface_image_url =
+//   "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5";
 const openai_summary_url = "https://api.openai.com/v1/chat/completions";
 
 // Generate a data URL
@@ -59,14 +60,14 @@ const generateOpenAiImage = server$(async function (prompt: string) {
     model: "dall-e-3",
     prompt: prompt,
     n: 1,
-    size: "1200x630",
+    size: "1024x1024",
   };
 
   const response = await fetch(openai_image_url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + this.env.get("HF_KEY"),
+      Authorization: "Bearer " + this.env.get("OPENAI_KEY"),
     },
     body: JSON.stringify(request_image_json),
   });
@@ -97,8 +98,7 @@ const generateSummary = server$(async function (full_content: string) {
       {
         role: "system",
         content:
-          "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and provide an image description that would pair well with the content. Avoid descriptions that involve text or graphic design or images of people",
-        // "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and summarize it into a concise abstract paragraph. Aim to retain the most important points, providing a coherent and readable summary that could help a person understand the main points of the discussion without needing to read the entire text. Please avoid unnecessary details or tangential points.",
+          "You are a highly skilled AI trained in language comprehension and summarization. I would like you to read the following text and provide an image description that would pair well with the content. Avoid descriptions that involve text or graphic design or images of people. Focus on the most important topic and describe an image that matches that. Do not introduce too many individual concepts, do not use a collage, and do not explain the meaning or the reasoning behind the choices. Make the image pop with color and striking visuals. The description should describe the style of the image, either photograph, cartoon, digital render.",
       },
       {
         role: "user",
@@ -187,7 +187,7 @@ export default component$(() => {
             class="plain-button"
             type="submit"
           >
-            Generate
+            {summaryImageAction.isRunning ? "Loading..." : "Generate!"}
           </button>
         </div>
       </Form>
