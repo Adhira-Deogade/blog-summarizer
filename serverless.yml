@@ -14,6 +14,10 @@ functions:
     handler: server/entry_aws-lambda.qwikApp
     events:
       - httpApi: "*"
+    environment:
+      EXAMPLE: "my string"
+      OPENAI_KEY: ${file(./.env.yml):OPENAI_KEY}
+      HF_KEY: ${file(./.env.yml):HF_KEY}
 
 custom:
   serverless-offline:
@@ -26,6 +30,7 @@ package:
     - "!*/**"
     - "server/**"
     - "dist/**"
+    - "node_modules/**"
 
 plugins:
   - serverless-offline
