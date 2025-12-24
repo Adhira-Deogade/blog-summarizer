@@ -7,10 +7,12 @@ import {
   zod$,
   type DocumentHead,
 } from "@builder.io/qwik-city";
+import { EnvGetter } from "@builder.io/qwik-city/middleware/request-handler";
 import sharp from "sharp";
 
 const openai_image_url = "https://api.openai.com/v1/images/generations";
-const huggingface_image_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+const huggingface_image_url = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
+// const huggingface_image_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
 // const huggingface_image_url =
 //   "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5";
 const openai_summary_url = "https://api.openai.com/v1/chat/completions";
@@ -20,6 +22,13 @@ const generateDataURL = (mediatype: string, data: Buffer) => {
   const data_url = "data:" + mediatype + ";base64," + data.toString("base64");
   return data_url;
 };
+
+const safeGet=(env: EnvGetter, KEY: string) => {
+  const val = env.get(KEY)
+  if (val) return val
+  throw new Error("missing: " + KEY)
+
+}
 
 // Generate image from summary
 const generateHfImage = server$(async function (prompt: string) {
@@ -31,7 +40,7 @@ const generateHfImage = server$(async function (prompt: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + this.env.get("HF_KEY"),
+      Authorization: "Bearer " + safeGet(this.env, "HF_KEY"),
     },
     body: JSON.stringify(request_image_json),
   });
@@ -51,7 +60,7 @@ const generateHfImage = server$(async function (prompt: string) {
       resizedData,
     );
   }
-  const msg = response.status + ": " + (await response.text());
+  const msg = huggingface_image_url + "   " + response.status + ": " + (await response.text());
   throw new Error(msg);
 });
 
@@ -63,11 +72,13 @@ const generateOpenAiImage = server$(async function (prompt: string) {
     size: "1024x1024",
   };
 
+  console.log(fetch)
+
   const response = await fetch(openai_image_url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + this.env.get("OPENAI_KEY"),
+      Authorization: "Bearer " + safeGet(this.env, "OPENAI_KEY"),
     },
     body: JSON.stringify(request_image_json),
   });
@@ -76,7 +87,7 @@ const generateOpenAiImage = server$(async function (prompt: string) {
     console.log(data.data[0].url);
     return data.data[0].url;
   }
-  const msg = response.status + ": " + (await response.text());
+  const msg = openai_image_url  + "   " +  response.status + ": " + (await response.text());
   throw new Error(msg);
 });
 
